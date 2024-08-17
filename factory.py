@@ -41,6 +41,7 @@ def make_account_farmers(account):
     sleep(random() * 10)
     return farmers
 
+
 def main(farmers):
     while True:
         shuffle(farmers)
@@ -49,6 +50,7 @@ def main(farmers):
             sleep(1 + random())
         sleep(1)
 
+
 def farm_in_thread(phone):
     import asyncio
     loop = asyncio.new_event_loop()
@@ -56,20 +58,21 @@ def farm_in_thread(phone):
     main(make_account_farmers(phone))
 
 
-if MULTITHREAD:
-    for account in TELEGRAM_ACCOUNTS:
-        Thread(target=farm_in_thread, args=(account,)).start()
-    while True:
-        input()
-else:
-    farmers = []
-    for account in TELEGRAM_ACCOUNTS:
-        farmers += make_account_farmers(account)
-    print('')
-    farmer_names = ", ".join(set([farmer.name.lower() for farmer in farmers]))
-    logging.info("Найдены фармеры: {farmer_names}".format(farmer_names=farmer_names))
-
-    if not farmers:
-        exit()
-
-    main(farmers)
+if __name__ == '__main__':
+    if MULTITHREAD:
+        for account in TELEGRAM_ACCOUNTS:
+            Thread(target=farm_in_thread, args=(account,)).start()
+        while True:
+            input()
+    else:
+        farmers = []
+        for account in TELEGRAM_ACCOUNTS:
+            farmers += make_account_farmers(account)
+        print('')
+        farmer_names = ", ".join(set([farmer.name.lower() for farmer in farmers]))
+        logging.info("Найдены фармеры: {farmer_names}".format(farmer_names=farmer_names))
+    
+        if not farmers:
+            exit()
+    
+        main(farmers)
