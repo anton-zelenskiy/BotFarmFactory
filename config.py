@@ -1,8 +1,11 @@
+import os
+
+
 ACCOUNTS_DIR = "accounts_data"
 # TELEGRAM WEB
 TELEGRAM_AUTH = dict(
-    api_id=20717620,
-    api_hash="a88859740cfc0e7a3515b8adc28cf16f",
+    api_id=os.getenv('TELEGRAM_API_ID'),
+    api_hash=os.getenv('TELEGRAM_API_HASH'),
     device_model="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     system_version="Windows",
     app_version="1.57 Z",
