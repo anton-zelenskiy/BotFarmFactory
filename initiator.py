@@ -75,7 +75,7 @@ class Initiator(TelegramClient):
         auth_data = web_app.url.split('#tgWebAppData=')[1].replace("%3D","=").split('&tgWebAppVersion=')[0].replace("%26","&")
         user = auth_data.split("user=")[1].split("&")[0]
         auth_data = auth_data.replace(user, unquote(user))
-        return {"userId": self._self_id, "authData": unquote(auth_data), 'url': web_app.url}
+        return {"userId": self._self_id, "authData": json.dumps(unquote(auth_data)), 'url': web_app.url}
 
     @catch_flood_error
     def join_group(self, group_link):
