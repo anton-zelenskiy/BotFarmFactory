@@ -18,7 +18,7 @@ DEFAULT_EST_TIME = 60
 class BotFarmer(BaseFarmer):
 
     name = "BlumCryptoBot"
-    app_extra = "ref_ItXoLRFElL"
+    app_extra = "ref_20RCDJRsLq"
     balance = None
     balance_data = None
     play_passes = None
@@ -29,7 +29,7 @@ class BotFarmer(BaseFarmer):
 
     @property
     def initialization_data(self):
-        return dict(peer=self.name, 
+        return dict(peer=self.name,
                     app=InputBotAppShortName(self.initiator.get_input_entity(self.name), "app"),
                     start_param=self.app_extra)
 
@@ -59,7 +59,7 @@ class BotFarmer(BaseFarmer):
                     if not self.create_account_and_get_token(init_data=init_data["authData"]):
                         return
                 self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
-    
+
     def create_account_and_get_token(self, init_data):
         if not MANUAL_USERNAME:
             import string
@@ -94,7 +94,7 @@ class BotFarmer(BaseFarmer):
             self.auth_data = result.json()
             self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
 
-    
+
     def update_tasks(self):
         response = self.get(URL_TASKS)
         if response.status_code == 200:
@@ -103,7 +103,7 @@ class BotFarmer(BaseFarmer):
             for item in result:
                 if task_group := item["tasks"]:
                     self.tasks = self.tasks + task_group
-    
+
     @property
     def estimate_time(self):
         if 'farming' in self.balance_data:
@@ -119,7 +119,7 @@ class BotFarmer(BaseFarmer):
             self.balance_data = response.json()
             self.balance = self.balance_data['availableBalance']
             self.play_passes = self.balance_data['playPasses']
-    
+
     def check_tasks(self):
         self.update_tasks()
         for task in self.tasks:
@@ -135,7 +135,7 @@ class BotFarmer(BaseFarmer):
                     self.log(MSG_TASK_CLAIMED.format(**task))
                     task.update(response.json())
                     sleep(random() * 5)
-    
+
     def start_farming(self):
         if 'farming' not in self.balance_data:
             self.log(MSG_START_FARMING)
@@ -162,7 +162,7 @@ class BotFarmer(BaseFarmer):
                         sleep(1)
                 self.log(MSG_PLAYED_GAME.format(result=data['points']))
                 self.update_balance()
-    
+
     def daily_reward(self):
         result = self.get(URL_DAILY_REWARD, return_codes=(404,))
         if result.status_code == 200:
