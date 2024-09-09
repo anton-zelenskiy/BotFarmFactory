@@ -67,6 +67,7 @@ class Initiator(TelegramClient):
     def get_auth_data(self, **kwargs):
         kwargs['platform'] = kwargs.get('platform', 'android')
         kwargs['from_bot_menu'] = kwargs.get('from_bot_menu', False)
+        dicted = kwargs.pop('dicted', None)
         if not 'app' in kwargs:
             web_app = self(functions.messages.RequestWebViewRequest(**kwargs))
         else:
@@ -74,8 +75,7 @@ class Initiator(TelegramClient):
             web_app = self(functions.messages.RequestAppWebViewRequest(**kwargs, write_allowed=True))
         auth_data = web_app.url.split('#tgWebAppData=')[1].replace("%3D","=").split('&tgWebAppVersion=')[0].replace("%26","&")
         user = auth_data.split("user=")[1].split("&")[0]
-        auth_data = auth_data.replace(user, unquote(user))
-        return {"userId": self._self_id, "authData": unquote(auth_data), 'url': web_app.url}
+        return {"userId": self._self_id, "authData": auth_data.replace(user, unquote(user)), 'url': web_app.url}
 
     @catch_flood_error
     def join_group(self, group_link):
