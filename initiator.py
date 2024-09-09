@@ -67,7 +67,6 @@ class Initiator(TelegramClient):
     def get_auth_data(self, **kwargs):
         kwargs['platform'] = kwargs.get('platform', 'android')
         kwargs['from_bot_menu'] = kwargs.get('from_bot_menu', False)
-        dicted = kwargs.pop('dicted', None)
         if not 'app' in kwargs:
             web_app = self(functions.messages.RequestWebViewRequest(**kwargs))
         else:
