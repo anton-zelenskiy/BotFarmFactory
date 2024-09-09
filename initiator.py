@@ -71,6 +71,33 @@ class Initiator(TelegramClient):
             web_app = self(functions.messages.RequestWebViewRequest(**kwargs))
         else:
             kwargs.pop('from_bot_menu')
+            web_app = self(functions.messages.RequestAppWebViewRequest(
+                **kwargs,
+                write_allowed=True)
+            )
+
+        query = unquote(
+            string=unquote(
+                string=web_app.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0]
+            )
+        )
+
+        print('>>> auth data: ', query)
+
+        return {
+            "userId": self._self_id,
+            "authData": query,
+            'url': web_app.url,
+        }
+
+    @catch_flood_error
+    def get_auth_data_old(self, **kwargs):
+        kwargs['platform'] = kwargs.get('platform', 'android')
+        kwargs['from_bot_menu'] = kwargs.get('from_bot_menu', False)
+        if not 'app' in kwargs:
+            web_app = self(functions.messages.RequestWebViewRequest(**kwargs))
+        else:
+            kwargs.pop('from_bot_menu')
             web_app = self(functions.messages.RequestAppWebViewRequest(**kwargs, write_allowed=True))
         auth_data = web_app.url.split('#tgWebAppData=')[1].replace("%3D","=").split('&tgWebAppVersion=')[0].replace("%26","&")
         user = auth_data.split("user=")[1].split("&")[0]

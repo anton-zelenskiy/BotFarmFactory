@@ -52,7 +52,13 @@ class BotFarmer(BaseFarmer):
         if not self.auth_data:
             self.log(MSG_AUTH)
             init_data = self.initiator.get_auth_data(**self.initialization_data)
-            result = self.post(URL_AUTH, json={"query": init_data["authData"]})
+            result = self.post(URL_AUTH, json={
+                'query': init_data['authData'],
+                'referralToken': self.app_extra,
+            })
+
+            print('>> auth response: ', result.json())
+
             if result.status_code == 200:
                 self.auth_data = result.json().get('token')
                 if not self.auth_data:
