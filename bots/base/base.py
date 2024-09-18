@@ -11,7 +11,7 @@ from config import DEBUG, SLEEP_AT_NIGHT, NIGHT_HOURS
 class BaseFarmer(Session):
 
     """
-    Базовый класс 
+    Базовый класс
     У дочерних классов реализовать методы:
         set_headers -> Установка заголовков
         authenticate -> Аутентификация и рефреш если надо
@@ -60,8 +60,8 @@ class BaseFarmer(Session):
             log_method = logging.error
         else:
             log_method = debug_logger.debug
-        msg = LOG_TEMPLATE.format(farmer_name=self.name.lower(), 
-                                  user=self.account_name, 
+        msg = LOG_TEMPLATE.format(farmer_name=self.name.lower(),
+                                  user=self.account_name,
                                   message=message,
                                   ip=ip)
         log_method(msg)
@@ -75,11 +75,11 @@ class BaseFarmer(Session):
     @retry
     def request(self, *args, **kwargs):
         response = super().request(*args, **kwargs)
-        if DEBUG and self.debug:
-            self.debug(f"request {args}, {kwargs}")
-            self.debug(f"response {response.status_code}, {response.text}")
+        # if DEBUG and self.debug:
+        self.debug(f"request {args}, {kwargs}")
+        self.debug(f"response {response.status_code}, {response.text}")
         return response
-    
+
     def get_account_name(self):
         me = self.initiator.get_me()
         self.account_name = me.username or me.first_name or me.phone
@@ -89,13 +89,13 @@ class BaseFarmer(Session):
         if SLEEP_AT_NIGHT and datetime.now().hour in range(*NIGHT_HOURS):
             return False
         return self.start_time <= time()
-    
+
     def set_start_time(self):
         self.start_time = time() + 10 * 60
 
     def set_headers(self, *args, **kwargs):
         self.update_user_agent()
-    
+
     def update_user_agent(self):
         user_agent_header = 'user-agent'
         for header in self.headers:
@@ -106,7 +106,7 @@ class BaseFarmer(Session):
 
     def authenticate(self, *args, **kwargs):
         raise NotImplementedError
-    
+
     def refresh_token(self, *args, **kwargs):
         raise NotImplementedError
 
