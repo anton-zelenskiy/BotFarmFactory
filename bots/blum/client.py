@@ -52,7 +52,10 @@ class BotFarmer(BaseFarmer):
 
     def authenticate(self):
         if not self.auth_data:
+            self.log('crutch')
             self.auth_data = self.tmp_get_auth_data()
+            self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
+            return
 
             self.log(MSG_AUTH)
             init_data = self.initiator.get_auth_data(**self.initialization_data)
