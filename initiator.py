@@ -73,8 +73,8 @@ class Initiator(TelegramClient):
             kwargs.pop('from_bot_menu')
             web_app = self(functions.messages.RequestAppWebViewRequest(
                 **kwargs,
-                write_allowed=True)
-            )
+                write_allowed=True
+            ))
 
         query = unquote(
             string=unquote(
