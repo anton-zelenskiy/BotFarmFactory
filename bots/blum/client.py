@@ -1,3 +1,7 @@
+import json
+
+import jsom
+import os
 from random import randrange, choice, random
 from time import sleep, time
 from telethon.types import InputBotAppShortName
@@ -64,6 +68,13 @@ class BotFarmer(BaseFarmer):
                     if not self.create_account_and_get_token(init_data=init_data["authData"]):
                         return
                 self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
+
+    def tmp_get_auth_data(self) -> dict[str, str]:
+        account = self.get_account_name()
+        print('account_name: ', account)
+        auth_data = json.loads(os.getenv('BLUM_AUTH_DATA'))
+
+        return auth_data.get(account, {})
 
     def create_account_and_get_token(self, init_data):
         if not MANUAL_USERNAME:
