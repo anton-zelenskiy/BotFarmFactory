@@ -74,7 +74,8 @@ class BotFarmer(BaseFarmer):
         print('account_name: ', account)
         auth_data = json.loads(os.getenv('BLUM_AUTH_DATA'))
 
-        return auth_data.get(account, {})
+        account_auth_data = auth_data.get(account, {})
+        self.auth_data = account_auth_data
 
     def create_account_and_get_token(self, init_data):
         if not MANUAL_USERNAME:
