@@ -105,6 +105,9 @@ class BotFarmer(BaseFarmer):
             sleep(5)
 
     def refresh_token(self):
+        # crutch
+        self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
+        return
         self.log(MSG_REFRESH)
         self.headers.pop('Authorization')
         result = self.post(URL_REFRESH_TOKEN, json={"refresh": self.auth_data['refresh']})
