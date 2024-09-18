@@ -71,11 +71,10 @@ class BotFarmer(BaseFarmer):
                 self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
 
     def tmp_get_auth_data(self) -> dict[str, str]:
-        account = self.get_account_name()
-        self.log(f'account_name: {account}')
+        self.log(f'account_name: {self.account_name}')
         auth_data = json.loads(os.getenv('BLUM_AUTH_DATA'))
 
-        return auth_data.get(account, {})
+        return auth_data.get(self.account_name, {})
 
     def create_account_and_get_token(self, init_data):
         if not MANUAL_USERNAME:
@@ -101,7 +100,6 @@ class BotFarmer(BaseFarmer):
                     return
                 return True
             sleep(5)
-
 
     def refresh_token(self):
         self.log(MSG_REFRESH)
