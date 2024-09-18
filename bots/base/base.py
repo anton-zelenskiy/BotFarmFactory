@@ -76,8 +76,8 @@ class BaseFarmer(Session):
     def request(self, *args, **kwargs):
         response = super().request(*args, **kwargs)
         # if DEBUG and self.debug:
-        self.debug(f"request {args}, {kwargs}")
-        self.debug(f"response {response.status_code}, {response.text}")
+        self.log(f"request {args}, {kwargs}")
+        self.log(f"response {response.status_code}, {response.text}")
         return response
 
     def get_account_name(self):
