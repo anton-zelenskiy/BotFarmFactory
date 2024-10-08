@@ -1,13 +1,13 @@
 import os
-import json
 from time import sleep
-from telethon.sync import TelegramClient, functions, types
-from telethon.tl.functions.channels import JoinChannelRequest, InviteToChannelRequest
+from urllib.parse import unquote
+
 from telethon.errors import FloodWaitError
-from urllib.parse import unquote, parse_qs, urlparse
-from datetime import timedelta
-from config import ACCOUNTS_DIR, TELEGRAM_AUTH
+from telethon.sync import TelegramClient, functions
+from telethon.tl.functions.channels import JoinChannelRequest
+
 from bots.base.base import logging
+from config import ACCOUNTS_DIR, TELEGRAM_AUTH
 
 
 def username(dialog):
@@ -75,33 +75,14 @@ class Initiator(TelegramClient):
                 **kwargs,
                 write_allowed=True
             ))
-
-        query = unquote(
-            string=unquote(
-                string=web_app.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0]
-            )
-        )
-
-        print('>>> auth data: ', query)
-
+        auth_data = web_app.url.split('#tgWebAppData=')[1].replace("%3D", "=").split(
+            '&tgWebAppVersion=')[0].replace("%26", "&")
+        user = auth_data.split("user=")[1].split("&")[0]
         return {
             "userId": self._self_id,
-            "authData": query,
-            'url': web_app.url,
+            "authData": auth_data.replace(user, unquote(user)),
+            'url': web_app.url
         }
-
-    @catch_flood_error
-    def get_auth_data_old(self, **kwargs):
-        kwargs['platform'] = kwargs.get('platform', 'android')
-        kwargs['from_bot_menu'] = kwargs.get('from_bot_menu', False)
-        if not 'app' in kwargs:
-            web_app = self(functions.messages.RequestWebViewRequest(**kwargs))
-        else:
-            kwargs.pop('from_bot_menu')
-            web_app = self(functions.messages.RequestAppWebViewRequest(**kwargs, write_allowed=True))
-        auth_data = web_app.url.split('#tgWebAppData=')[1].replace("%3D","=").split('&tgWebAppVersion=')[0].replace("%26","&")
-        user = auth_data.split("user=")[1].split("&")[0]
-        return {"userId": self._self_id, "authData": auth_data.replace(user, unquote(user)), 'url': web_app.url}
 
     @catch_flood_error
     def join_group(self, group_link):

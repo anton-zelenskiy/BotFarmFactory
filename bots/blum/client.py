@@ -1,6 +1,3 @@
-import json
-
-import os
 from random import randrange, choice, random
 from time import sleep, time
 from telethon.types import InputBotAppShortName
@@ -10,7 +7,8 @@ from bots.blum.strings import HEADERS, URL_REFRESH_TOKEN, URL_BALANCE, URL_TASKS
     URL_PLAY_CLAIM,  URL_DAILY_REWARD, URL_FRIENDS_BALANCE, URL_FRIENDS_CLAIM, MSG_AUTH, \
     MSG_REFRESH, MSG_BALANCE, MSG_START_FARMING, MSG_CLAIM_FARM, MSG_BEGIN_GAME, \
     MSG_PLAYED_GAME, MSG_DAILY_REWARD, MSG_FRIENDS_CLAIM, URL_CHECK_NAME, MSG_INPUT_USERNAME, \
-    URL_TASK_CLAIM, URL_TASK_START, MSG_TASK_CLAIMED, MSG_TASK_STARTED
+    URL_TASK_CLAIM, URL_TASK_START, MSG_TASK_CLAIMED, MSG_TASK_STARTED, \
+    URL_TASK_VALIDATE, TASK_CODES
 from bots.blum.config import MANUAL_USERNAME
 
 GAME_RESULT_RANGE = (190, 280)
@@ -52,16 +50,10 @@ class BotFarmer(BaseFarmer):
 
     def authenticate(self):
         if not self.auth_data:
-            self.log('crutch')
-            self.auth_data = self.tmp_get_auth_data()
-            self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
-            return
-
             self.log(MSG_AUTH)
             init_data = self.initiator.get_auth_data(**self.initialization_data)
             result = self.post(URL_AUTH, json={
                 'query': init_data['authData'],
-                'referralToken': self.app_extra,
             })
 
             print('>> auth response: ', result.json())
@@ -72,12 +64,6 @@ class BotFarmer(BaseFarmer):
                     if not self.create_account_and_get_token(init_data=init_data["authData"]):
                         return
                 self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
-
-    def tmp_get_auth_data(self) -> dict[str, str]:
-        self.log(f'account_name: {self.account_name}')
-        auth_data = json.loads(os.getenv('BLUM_AUTH_DATA'))
-
-        return auth_data.get(self.account_name, {})
 
     def create_account_and_get_token(self, init_data):
         if not MANUAL_USERNAME:
@@ -105,16 +91,12 @@ class BotFarmer(BaseFarmer):
             sleep(5)
 
     def refresh_token(self):
-        # crutch
-        self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
-        return
         self.log(MSG_REFRESH)
         self.headers.pop('Authorization')
         result = self.post(URL_REFRESH_TOKEN, json={"refresh": self.auth_data['refresh']})
         if result.status_code == 200:
             self.auth_data = result.json()
             self.headers['Authorization'] = f"Bearer {self.auth_data['access']}"
-
 
     def update_tasks(self):
         response = self.get(URL_TASKS)
@@ -143,19 +125,46 @@ class BotFarmer(BaseFarmer):
 
     def check_tasks(self):
         self.update_tasks()
-        for task in self.tasks:
-            if task['type'] == 'SOCIAL_SUBSCRIPTION' and task['status'] == "NOT_STARTED":
-                response = self.post(URL_TASK_START.format(**task))
-                if response.status_code == 200:
-                    self.log(MSG_TASK_STARTED.format(**task))
-                    task.update(response.json())
-                    sleep(random() * 5)
-            if task['status'] == "READY_FOR_CLAIM":
-                response = self.post(URL_TASK_CLAIM.format(**task))
-                if response.status_code == 200:
-                    self.log(MSG_TASK_CLAIMED.format(**task))
-                    task.update(response.json())
-                    sleep(random() * 5)
+        for section in self.tasks:
+            if section.get('title') == "Weekly":
+                self.process_weekly_tasks(section)
+            self.process_new_tasks(section)
+
+    def process_new_tasks(self, section):
+        for sub_section in section.get('subSections', []):
+            if isinstance(sub_section, dict) and sub_section.get('title') == "New":
+                for task in sub_section.get('tasks', []):
+                    self.handle_task(task)
+
+    def process_weekly_tasks(self, section):
+        for task in section.get('tasks', []):
+            for sub_task in task.get('subTasks', []):
+                self.handle_task(sub_task)
+
+    def handle_task(self, task):
+        task_id = task['id']
+        if task['status'] == "NOT_STARTED":
+            response = self.post(URL_TASK_START.format(id=task_id))
+            if response.status_code == 200:
+                self.log(MSG_TASK_STARTED.format(title=task['title']))
+                task.update(response.json())
+                sleep(random() * 5)
+        elif task['status'] == "READY_FOR_CLAIM":
+            response = self.post(URL_TASK_CLAIM.format(id=task_id))
+            if response.status_code == 200:
+                self.log(MSG_TASK_CLAIMED.format(title=task['title'], reward=task.get('reward', 'не указано')))
+                task.update(response.json())
+                sleep(random() * 5)
+        elif task['status'] == "READY_FOR_VERIFY":
+            keyword = TASK_CODES.get(task['title'], "Введите код для задания: ")
+            payload = {"keyword": keyword}
+            validate_response = self.post(URL_TASK_VALIDATE.format(id=task_id), json=payload)
+            if validate_response.status_code == 200:
+                self.log(f"Задание '{task['title']}' успешно выполнено.")
+                task.update(validate_response.json())
+            else:
+                self.error(f"Не удалось подтвердить задание '{task['title']}'.")
+                sleep(2)
 
     def start_farming(self):
         if 'farming' not in self.balance_data:
